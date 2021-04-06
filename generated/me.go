@@ -301,13 +301,20 @@ func (entity *ManagedEntity) SerializeTo(b gopacket.SerializeBuffer, msgType byt
 	if err != nil {
 		return err
 	}
+
+	// Allows to fetch a group of Attributes for the ME as per RequestedAttributeMask
+	attributeMask := entity.GetRequestedAttributeMask()
+	if attributeMask == 0 {
+		attributeMask = entity.GetAttributeMask()
+	}
+
 	binary.BigEndian.PutUint16(bytes, uint16(entity.GetClassID()))
 	binary.BigEndian.PutUint16(bytes[2:], entity.GetEntityID())
-	binary.BigEndian.PutUint16(bytes[4:], entity.GetAttributeMask())
+	binary.BigEndian.PutUint16(bytes[4:], attributeMask)
 
 	// TODO: Need to limit number of bytes appended to not exceed packet size
 	// Is there space/metadata info in 'b' parameter to allow this?
-	err, _ = entity.SerializeAttributes(entity.attributes, entity.GetAttributeMask(), b,
+	err, _ = entity.SerializeAttributes(entity.attributes, attributeMask, b,
 		msgType, bytesAvailable, opts.FixLengths)
 	return err
 }
